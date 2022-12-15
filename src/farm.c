@@ -81,7 +81,8 @@ static void *signal_handler_func (void *args){
         
         case SIGUSR1:
             partial_result = 1;
-            return NULL; 
+            //return NULL;
+            break; 
 
         case SIGUSR2: 
             return NULL; 
