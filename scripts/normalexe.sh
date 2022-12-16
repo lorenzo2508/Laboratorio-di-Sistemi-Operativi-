@@ -73,7 +73,7 @@ mkdir -p testdir/testdir2
 mv file111.dat file150.dat testdir/testdir2
 
 # esecuzione con 16 thread e coda lunga 8  
-./farm -n 16 -q 8 -t 100 -d testdir file*
+./farm -n 8 -q 8 -d testdir file*
 
 echo ""
 echo -e "${GREEN}normalexe FINISH${OFF}"

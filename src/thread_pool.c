@@ -15,7 +15,6 @@ thread_pool_t *thread_pool_create(int thread_num, queue_t *queue); // Create the
 void *thread_task(void *arg); // Exec the tasks store inside the queue 
 void thread_pool_destroy(thread_pool_t *thread_pool);// Invoke for destroy the pool 
 
-extern volatile sig_atomic_t sig_pipe_rise; 
   
 
 thread_pool_t *thread_pool_create(int thread_num, queue_t *queue){
@@ -67,11 +66,7 @@ void *thread_task(void *arg){
             break;
         }
 
-        if(sig_pipe_rise == 1){
-            pthread_kill(pthread_self(), SIGPIPE); 
-            continue;
-        }
-
+        
        
         pthread_mutex_lock(&thread_pool->queue->queue_lock); 
      

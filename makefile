@@ -65,5 +65,5 @@ cleanall:
 	rm -f $(OBJ_DIR)/* ./*.dat ./*.txt 
 	rm --recursive -f $(TEST_DIR)
 	@touch $(OBJ_DIR)
-
+	
 	

@@ -232,11 +232,6 @@ void *enqueue_task(void *arg){
             exit(EXIT_FAILURE);
         }
 
-        if(sig_pipe_rise == 1){
-            pthread_kill(pthread_self(), SIGPIPE); 
-            return NULL;  
-        }
-
         if(i < args->number_of_files){
             node_t *entry = linkedList_access_data(args->file_list, i); // Use to take the entry of master_args list that contain filename
             task->arg = (char*) entry->data; 
@@ -244,7 +239,24 @@ void *enqueue_task(void *arg){
         }
         pthread_mutex_lock(&args->queue->queue_lock); 
         //fprintf(stderr, "queue len: %d\n", args->queue->list->length);
-
+        // if SIGPIPE rise then master enqueue stop task to stop the pool    
+         if(sig_pipe_rise == 1){
+            
+            task_t *end_taks = (task_t*)malloc(sizeof(task_t)); // Use by threadpool to stop all threads
+            if(end_taks ==NULL){
+                perror ("malloc fail enqueue task; end_task"); 
+                errno = ENOMEM;
+                fprintf(stderr, "errno value: %d\n", errno);  
+                exit(EXIT_FAILURE); 
+            }
+            end_taks->arg = "stop";
+            end_taks->taskfunc = workerTask;
+            push(args->queue, (void*)end_taks, sizeof(task_t));
+            free(end_taks);
+            pthread_cond_broadcast(&args->queue->queue_cond);
+            pthread_mutex_unlock(&args->queue->queue_lock); 
+            break;  
+        }
         // When master_thread has enqueue all the task, enqueu those two special tasks
         // end_task and exit_task
         if(i == args->number_of_files){

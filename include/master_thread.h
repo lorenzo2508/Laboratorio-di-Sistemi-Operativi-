@@ -7,6 +7,7 @@
 #define PROGETTOFARM_SOL22_23_MASTER_THREAD_H
 #include "queue.h"
 #include "task.h"
+#include "thread_pool.h"
 #include <pthread.h>
 
 // DATA TYPES
@@ -15,6 +16,7 @@
 typedef struct master_args{
     linkedList_t *file_list; 
     // A queue to store work.
+    thread_pool_t *thread_pool; 
     queue_t *queue;
     int delay_request_time;
     int number_of_files;  

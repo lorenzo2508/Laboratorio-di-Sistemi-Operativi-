@@ -216,6 +216,8 @@ int main (int argc, char *argv[]){
     if (process_id == 0){
         //=========================================================================
         //  COLLECTOR PROCESS CODE
+
+       
         
         char buff[MAXFILENAME];
         int n_byte_read; 
@@ -249,20 +251,27 @@ int main (int argc, char *argv[]){
             fd_num = fd_sk; 
         FD_ZERO(&set);
         FD_SET(fd_sk, &set);
+        
+         
 
         //===========================================================================
         //  While loop for handle the connection 
         while(1){
            ready_set = set; 
         
+        
            if((select(fd_num + 1, &ready_set, NULL, NULL, NULL)) == -1){
                 perror("select"); 
                 exit(EXIT_FAILURE); 
            }
            else{
+            
             // Check fd set
             for(fd_index = 0; fd_index <= fd_num; fd_index ++){
-               
+                if(sig_pipe_rise == 1){
+                    close(fd_index); 
+                    continue; 
+                }
                 if(FD_ISSET(fd_index, &ready_set)){
                     
                     // If fd ready is the server fd ("fd_sk") then accept a new connection 
@@ -535,13 +544,19 @@ else{                           // BACK TO
         pthread_t *master_thread = master_create(master_args, queue); 
 
 
-        //sleep(2); 
-        //kill(getppid(), SIGPIPE); 
+        
     //=================================================================================
     //  Pool, queue, task, and master thread destruction
-        wait(NULL); 
+        if ((wait(NULL)== -1)){
+            perror("wait collector");
+            fprintf(stderr, "Err code: %d", errno);  
+            exit(EXIT_FAILURE); 
+        }  
         if(sig_pipe_rise == 1){
-            fprintf(stderr, "elimino strutture dati causa sigpipe\n");
+            thread_pool_destroy (thread_pool); // Destroy the pool 
+            master_thread_destroy(master_thread); // Destroy master_thread
+            pthread_join(signal_handler, NULL); 
+            fprintf(stderr, "SIGPIPE from server, clear all memory and exit\n");
              // Free all the data structure
             for (int i = 0; i < number_of_file_cpy_for_destruction; i ++){
                 free(files[i]);
@@ -556,9 +571,8 @@ else{                           // BACK TO
             if (remove("farm.sck") == -1) {
                 perror("remove"); 
                 fprintf(stderr, "Err code: %d", errno); 
-                return errno; 
+                exit(EXIT_FAILURE);  
             }
-            fprintf(stderr, "sopra la exit causa sigpipe master\n");
             exit(EXIT_FAILURE); 
            
         }
@@ -583,7 +597,7 @@ else{                           // BACK TO
         if (remove("farm.sck") == -1) {
             perror("remove"); 
             fprintf(stderr, "Err code: %d", errno); 
-            return 1; 
+            exit(EXIT_FAILURE); 
         }
         
            
