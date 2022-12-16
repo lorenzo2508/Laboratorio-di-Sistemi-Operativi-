@@ -77,7 +77,8 @@ void *thread_task(void *arg){
         // Check if there is something in the queue to be taken
         
         task_t *thread_task = (task_t*) take(thread_pool->queue); 
-       
+       // Use to stop the pool 
+       // also use when signal rise -signal handling
        if((strcmp(thread_task->arg, "stop")) == 0){
             thread_pool->active = 0;
             push(thread_pool->queue, (void*)thread_task, sizeof(task_t));

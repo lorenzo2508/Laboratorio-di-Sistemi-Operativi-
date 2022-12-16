@@ -44,7 +44,7 @@ static void *signal_handler_func (void *args);
 
 
 //  Signal-handler function, it will be use by a thread to handle the signal 
-
+//signal handling
 static void *signal_handler_func (void *args){
     sigset_t* set = (sigset_t*) args; //    use to identify the signal set
     int signal; //  this is the signal recive
@@ -166,8 +166,8 @@ void lsR(const char nomedir[], linkedList_t *dir_file_list) {
 
 int main (int argc, char *argv[]){
 
+    //signal handling
     //  Declaretion for handling the signals
-//  Declaretion for handling the signals
 
     pthread_t signal_handler; // thread use to handle signals
 

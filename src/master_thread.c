@@ -240,6 +240,7 @@ void *enqueue_task(void *arg){
         pthread_mutex_lock(&args->queue->queue_lock); 
         //fprintf(stderr, "queue len: %d\n", args->queue->list->length);
         // if SIGPIPE rise then master enqueue stop task to stop the pool    
+        //signal handling
          if(sig_pipe_rise == 1){
             
             task_t *end_taks = (task_t*)malloc(sizeof(task_t)); // Use by threadpool to stop all threads
@@ -294,6 +295,7 @@ void *enqueue_task(void *arg){
         // If some signals (SIGINT, SIGQUIT, SIGHUP, SIGTERM) set "no_more_task"
         // the master_thread enqueue the special tasks to stop the pool and notify that collector has to exit his while loop
         // then master_thread stops. 
+        //signal handling
         if(no_more_task == 1){
             task_t *end_taks = (task_t*)malloc(sizeof(task_t)); // Use by threadpool to stop all threads
             task_t *exit_taks = (task_t*)malloc(sizeof(task_t)); // Use to notify collector process that has to exit his while loop
@@ -326,7 +328,7 @@ void *enqueue_task(void *arg){
             break; 
 
         }
-
+        //signal handling
         if(partial_result == 1){
             task_t *print_taks = (task_t*)malloc(sizeof(task_t)); // Use to notify collector process to print partial results 
 
