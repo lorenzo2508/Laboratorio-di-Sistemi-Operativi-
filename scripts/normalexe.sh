@@ -72,8 +72,9 @@ mv file19.dat file8.dat testdir
 mkdir -p testdir/testdir2
 mv file111.dat file150.dat testdir/testdir2
 
-# esecuzione con 16 thread e coda lunga 8  
-./farm -n 8 -q 8 -d testdir file*
+# esecuzione con 8 thread e coda lunga 8  
+# usando valgrind per mostrare che non ci sono memory leak possibili
+valgrind --leak-check=full ./farm -n 8 -q 8 -d testdir file*
 
 echo ""
 echo -e "${GREEN}normalexe FINISH${OFF}"
