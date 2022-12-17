@@ -287,6 +287,11 @@ int main (int argc, char *argv[]){
                     else{
                         
                         n_byte_read = read(fd_index, buff, MAXFILENAME); 
+                        if(n_byte_read == -1){
+                            close(fd_index); 
+                            perror("read"); 
+                            return 1; 
+                        }
                        
                         if(n_byte_read == 0){
                             FD_CLR(fd_index, &set);

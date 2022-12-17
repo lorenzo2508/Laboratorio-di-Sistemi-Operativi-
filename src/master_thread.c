@@ -93,7 +93,11 @@ void *workerTask (char *filepath){
     }
     
     //fprintf(stderr, "scrivo exit, buf: %s \n", buf_send_to_collector); 
-    write(fd_socket, buf_send_to_collector, MAXFILENAME);
+    if((write(fd_socket, buf_send_to_collector, MAXFILENAME)) == -1){
+        perror("write"); 
+        close(fd_socket); 
+        return NULL; 
+    }
     close(fd_socket);
     return NULL; 
     
@@ -126,7 +130,11 @@ void *workerTask (char *filepath){
             else exit(EXIT_FAILURE); 
         }
         //fprintf(stderr, "scrivo exit, buf: %s \n", buf_send_to_collector); 
-        write(fd_socket, buf_send_to_collector, MAXFILENAME);
+        if((write(fd_socket, buf_send_to_collector, MAXFILENAME)) == -1){
+            perror("write"); 
+            close(fd_socket); 
+            return NULL; 
+        }
         close(fd_socket);
         return NULL; 
     
@@ -204,7 +212,8 @@ void *workerTask (char *filepath){
     //fprintf(stderr, "sopra la write 3\n");
     if( (write(fd_socket, buf_send_to_collector, MAXFILENAME)) == -1){
         perror("write"); 
-        exit(EXIT_FAILURE); 
+        close(fd_socket); 
+        return NULL; 
     }
     //fprintf(stderr, "sopra la close 3, buff: %s\n", buf_send_to_collector);
     close(fd_socket); 
