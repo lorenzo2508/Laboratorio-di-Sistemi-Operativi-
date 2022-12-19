@@ -29,7 +29,7 @@ queue_t *queue_create(int queue_len){
         perror ("malloc fail queue_create"); 
         errno = ENOMEM;
         fprintf(stderr, "errno value: %d\n", errno);  
-        exit(EXIT_FAILURE); 
+        return NULL; 
     }
     queue->queue_max_bound = queue_len; 
 

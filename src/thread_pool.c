@@ -42,8 +42,10 @@ thread_pool_t *thread_pool_create(int thread_num, queue_t *queue){
     for (int i = 0; i < thread_num; i++){
         //fprintf(stderr, "flag activ in pool create %d\n", thread_pool->active);
         if((pthread_create(&(thread_pool->pool[i]), NULL, &thread_task, (void*) thread_pool)) != 0){
-            perror("Fail during threadPool creation"); 
-            exit(EXIT_FAILURE); 
+             perror("Fail during threadPool creation"); 
+            errno = EACCES;
+            fprintf(stderr, "errno value: %d", errno);   
+            return NULL;  
         }
         
     }

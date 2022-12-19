@@ -48,7 +48,7 @@ pthread_t *master_create (master_args_t *master_args, queue_t *queue){
         perror("Fail during threadPool creation"); 
         errno = EACCES;
         fprintf(stderr, "errno value: %d", errno);   
-        exit(EXIT_FAILURE); 
+        return NULL;  
     }
 
 
@@ -243,6 +243,12 @@ void *enqueue_task(void *arg){
 
         if(i < args->number_of_files){
             node_t *entry = linkedList_access_data(args->file_list, i); // Use to take the entry of master_args list that contain filename
+            if(entry == NULL){
+                errno = EINVAL; 
+                perror("Master thread linked_list_access_data"); 
+                fprintf(stderr, "Err code: %d\n", errno); 
+                exit(EXIT_FAILURE);
+            }
             task->arg = (char*) entry->data; 
             task->taskfunc = workerTask; 
         }

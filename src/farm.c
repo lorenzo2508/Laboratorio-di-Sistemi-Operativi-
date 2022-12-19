@@ -514,12 +514,11 @@ else{                           // BACK TO
         // Check the argument
         struct stat statbuf;
         int r;
-        SYSCALL_EXIT(stat,r,stat(source_dir, &statbuf),
-            "Facendo stat del nome %s: errno=%d\n",
-            source_dir, errno);
+        SYSCALL_EXIT(stat,r,stat(source_dir, &statbuf),"Facendo stat del nome %s: errno=%d\n", source_dir, errno);
+        
         if(!S_ISDIR(statbuf.st_mode)) {
             fprintf(stderr, "%s non e' una directory\n", source_dir);
-            return EXIT_FAILURE;
+            exit(EXIT_FAILURE);
         }    
 
         lsR(source_dir, master_args->file_list);
@@ -538,6 +537,9 @@ else{                           // BACK TO
             queue_len = 8; // If not specified as a command line option, the default value of the queue length is 8 
         }
         queue_t *queue = queue_create(queue_len);
+        if(queue == NULL){
+            exit(EXIT_FAILURE); 
+        }
         
 
     //=================================================================================
@@ -546,8 +548,13 @@ else{                           // BACK TO
             thread_num = 4; // If not specified as a command line option, the default number of thread is 4 (the same number of physical core on my machine)
         }
         thread_pool_t *thread_pool = thread_pool_create(thread_num, queue);
+        if(thread_pool == NULL){
+            exit(EXIT_FAILURE); 
+        }
         pthread_t *master_thread = master_create(master_args, queue); 
-
+        if(master_thread == NULL){
+            exit(EXIT_FAILURE); 
+        }
 
         
     //=================================================================================

@@ -70,7 +70,7 @@ node_t * iterate_on_list(linkedList_t *linked_list, int index){
         perror("linkedList: iterate_on_list"); 
         errno = EINVAL; 
         fprintf(stderr, "Need to pass a pointer to a LinkedList type object Err code: %d\n", errno); 
-        return NULL; 
+        exit(EXIT_FAILURE); 
     }
 
 
