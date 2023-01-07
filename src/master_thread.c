@@ -142,28 +142,37 @@ void *workerTask (char *filepath){
     
     //fprintf(stderr, "sto per aprire il file %s\n", filepath);
     FILE *fp = fopen(filepath, "rb"); 
-    unsigned char buf[BUFSZ] = {0};
-    size_t bytes = 0, readsz = sizeof buf;
     if (fp == NULL) {
-        perror("File Not Found!\n");
-        fprintf(stderr, "here \n");
+        perror("fopen");
+        fprintf(stderr, "Err code: %d \n", errno);
         exit(EXIT_FAILURE);
     }
+    unsigned char buf[BUFSZ] = {0};
+    size_t bytes = 0, 
+    readsz = sizeof buf;
+    
 
         
 
     //===================================================================================
     // Acquire the file size
 
-    fseek(fp, 0L, SEEK_END); // going to the end of the file for calculating the dimension 
+    if((fseek(fp, 0L, SEEK_END)) == -1){
+        perror("fseek"); 
+        fprintf(stderr, "Err code: %d \n", errno);
+        exit(EXIT_FAILURE);
+
+    } // going to the end of the file for calculating the dimension 
 
     // ftell gives me the size of the file in byte 
     long int file_size = ftell(fp); 
-    rewind(fp); // Go back to the beginning of the file 
     if(file_size == -1){
-        perror("Dimension not avaible"); 
+        perror("ftell"); 
+        fprintf(stderr, "Err code: %d \n", errno);
         exit(EXIT_FAILURE);
     }
+    rewind(fp); // Go back to the beginning of the file, it returns no value so doesn't need error handling
+    
 
     //===================================================================================
     // Execute the requested task, the sum of the long contained in the file
@@ -171,15 +180,14 @@ void *workerTask (char *filepath){
     int cont = 0; 
     long ris = 0; 
     while ((bytes = fread (buf, sizeof *buf, readsz, fp)) == readsz) {
+        if (bytes != readsz) {
+            fprintf(stderr, "fread() failed: %zu\n", bytes);
+            exit(EXIT_FAILURE);
+        }
         ris = ris + ((long)buf[0] * cont); 
         cont ++;
         
     }
-
-
-
-    //===================================================================================
-    // Now I close the file
 
     fclose(fp);
 
@@ -277,13 +285,13 @@ void *enqueue_task(void *arg){
         // end_task and exit_task
         if(i == args->number_of_files){
             task_t *end_taks = (task_t*)malloc(sizeof(task_t)); // Use by threadpool to stop all threads
-            task_t *exit_taks = (task_t*)malloc(sizeof(task_t)); // Use by collector process to exit his while loop
             if(end_taks ==NULL){
                 perror ("malloc fail enqueue task; end_task"); 
                 errno = ENOMEM;
                 fprintf(stderr, "errno value: %d\n", errno);  
                 exit(EXIT_FAILURE); 
             }
+            task_t *exit_taks = (task_t*)malloc(sizeof(task_t)); // Use by collector process to exit his while loop
             if(exit_taks ==NULL){
                 perror ("malloc fail enqueue task; exit_task"); 
                 errno = ENOMEM;
@@ -313,13 +321,14 @@ void *enqueue_task(void *arg){
         //signal handling
         if(no_more_task == 1){
             task_t *end_taks = (task_t*)malloc(sizeof(task_t)); // Use by threadpool to stop all threads
-            task_t *exit_taks = (task_t*)malloc(sizeof(task_t)); // Use to notify collector process that has to exit his while loop
-            if(end_taks ==NULL){
+             if(end_taks ==NULL){
                 perror ("malloc fail enqueue task; end_task"); 
                 errno = ENOMEM;
                 fprintf(stderr, "errno value: %d\n", errno);  
                 exit(EXIT_FAILURE); 
             }
+
+            task_t *exit_taks = (task_t*)malloc(sizeof(task_t)); // Use to notify collector process that has to exit his while loop
             if(exit_taks ==NULL){
                 perror ("malloc fail enqueue task; exit_task"); 
                 errno = ENOMEM;

@@ -52,7 +52,11 @@ static void *signal_handler_func (void *args){
     signal_thread_id = pthread_self(); 
     //  infinite loop to handle the signal  
     while(1){
-        sigwait(set, &signal); 
+        if((sigwait(set, &signal)) != 0){
+            perror("sigwait");
+            fprintf(stderr, "Fatal Error on sigwait");  
+            abort();
+        } 
         switch (signal)
         {
         case SIGINT:
@@ -114,15 +118,15 @@ void lsR(const char nomedir[], linkedList_t *dir_file_list) {
     // controllo che il parametro sia una directory
     struct stat statbuf;
     int r;
-    SYSCALL_EXIT(stat,r,stat(nomedir,&statbuf),"Facendo stat del nome %s: errno=%d\n",
+    SYSCALL_EXIT(stat,r,stat(nomedir,&statbuf),"Doing stat of the name %s: errno=%d\n",
 	    nomedir, errno);
 
     DIR * dir;
     
     if ((dir=opendir(nomedir)) == NULL) {
-	perror("opendir");
-	print_error("Errore aprendo la directory %s\n", nomedir);
-	return;
+	    perror("opendir");
+	    fprintf(stderr, "Err doing opendir %s\n", nomedir);
+	    return;
     } else {
 	struct dirent *file;
     
@@ -132,16 +136,16 @@ void lsR(const char nomedir[], linkedList_t *dir_file_list) {
 	    int len1 = strlen(nomedir);
 	    int len2 = strlen(file->d_name);
 	    if ((len1+len2+2)>MAXFILENAME) {
-		fprintf(stderr, "ERRORE: MAXFILENAME troppo piccolo\n");
-		exit(EXIT_FAILURE);
+		    fprintf(stderr, "ERR: MAXFILENAME too short\n");
+		    exit(EXIT_FAILURE);
 	    }	    
 	    strncpy(filename,nomedir,      MAXFILENAME-1);
 	    strncat(filename,"/",          MAXFILENAME-1);
 	    strncat(filename,file->d_name, MAXFILENAME-1);
 	    
 	    if (stat(filename, &statbuf)==-1) {
-		perror("eseguendo la stat");
-		print_error("Errore nel file %s\n", filename);
+		perror("Stat");
+		fprintf(stderr, "Err in filename %s\n", filename);
 		return;
 	    }
 	    if(S_ISDIR(statbuf.st_mode)) {
@@ -156,7 +160,8 @@ void lsR(const char nomedir[], linkedList_t *dir_file_list) {
             
 	    }
 	}
-	if (errno != 0) perror("readdir");
+	if (errno != 0) 
+        perror("readdir");
 	closedir(dir);
     }
 }
@@ -188,13 +193,18 @@ int main (int argc, char *argv[]){
     memset(&sig_act, 0, sizeof(sig_act));
     sig_act.sa_mask = sigset; 
 
-    pthread_sigmask(SIG_BLOCK, &sigset, NULL); 
+    if( (pthread_sigmask(SIG_BLOCK, &sigset, NULL)) != 0){
+        fprintf(stderr, "FATAL ERROR \n"); 
+        perror("pthread_sigmask"); 
+        abort(); 
+    } 
 
 //  Create signal handler thread
 
     if( (pthread_create(&signal_handler, NULL, &signal_handler_func, (void*) &sigset)) != 0){
         perror("Signal handler thread creation"); 
-        exit(EXIT_FAILURE); 
+        fprintf(stderr, "Signal handler thread creation fail, abort \n"); 
+        abort();  
     } 
 
 //=================================================================================
@@ -202,14 +212,13 @@ int main (int argc, char *argv[]){
 //=================================================================================
 //  Creation of the Collector process using fork() syscall 
 
-    int process_id = fork(); 
+    pid_t process_id = fork(); 
     if(process_id == -1){
         perror("fork"); 
-        return -1; 
+        exit(EXIT_FAILURE); 
     }
-
-    //sleep(2); 
-    //kill(getppid(), SIGPIPE); 
+    
+    
     
     // process_id = 0 means that we are in the child process (Collector)
    
@@ -217,8 +226,50 @@ int main (int argc, char *argv[]){
         //=========================================================================
         //  COLLECTOR PROCESS CODE
 
-       
+        // Signal handling: the collector process has to ignore signals
+
+         
+        sigset_t sigset;
+        EXIT_ON_SIGNAL_HANDLING(sigemptyset(&sigset), "sigemptyset\n"); 
+
+        // Sigaddset may fail if argument is invalid so I added error handling
+        EXIT_ON_SIGNAL_HANDLING(sigaddset(&sigset, SIGINT), "sigaddset SIGINT");
+        EXIT_ON_SIGNAL_HANDLING(sigaddset(&sigset, SIGHUP), "sigaddset SIGHUP");
+        EXIT_ON_SIGNAL_HANDLING(sigaddset(&sigset, SIGQUIT), "sigaddset SIGQUIT");
+        EXIT_ON_SIGNAL_HANDLING(sigaddset(&sigset, SIGTERM), "sigaddset SIGTERM");
+        EXIT_ON_SIGNAL_HANDLING(sigaddset(&sigset, SIGPIPE), "sigaddset SIGPIPE");
+        EXIT_ON_SIGNAL_HANDLING(sigaddset(&sigset, SIGUSR1), "sigaddset SIGUSR1");
         
+        // pthread_sigmask is use instead of sigprocmask for future/eventual extention of collector process
+        // from a single thread program into a multithread program.
+        // In case of a multithread extention of the process, a thread for signal handling should be  
+        // implemente
+
+        // Block the signals until the handler's installation is done 
+        EXIT_ON_SIGNAL_HANDLING(pthread_sigmask(SIG_BLOCK, &sigset, NULL), "pthread_sigmask\n");
+        
+        struct sigaction sig_act;
+        memset(&sig_act, 0, sizeof(sig_act));
+        sig_act.sa_handler = SIG_IGN; // Signals are ignored by Collector process
+        sigset_t handler_mask;
+        EXIT_ON_SIGNAL_HANDLING(sigemptyset(&handler_mask), "sigemptyset\n"); 
+        EXIT_ON_SIGNAL_HANDLING(sigaddset(&handler_mask, SIGINT), "sigaddset SIGINT");
+        EXIT_ON_SIGNAL_HANDLING(sigaddset(&handler_mask, SIGHUP), "sigaddset SIGHUP");
+        EXIT_ON_SIGNAL_HANDLING(sigaddset(&handler_mask, SIGQUIT), "sigaddset SIGQUIT");
+        EXIT_ON_SIGNAL_HANDLING(sigaddset(&handler_mask, SIGTERM), "sigaddset SIGTERM");
+        EXIT_ON_SIGNAL_HANDLING(sigaddset(&handler_mask, SIGPIPE), "sigaddset SIGPIPE");
+        EXIT_ON_SIGNAL_HANDLING(sigaddset(&handler_mask, SIGUSR1), "sigaddset SIGUSR1");
+        
+        sig_act.sa_mask = handler_mask; 
+        
+        EXIT_ON_SIGNAL_HANDLING(sigaction(SIGINT, &sig_act, NULL), "sigaction SIGINT \n");
+        EXIT_ON_SIGNAL_HANDLING(sigaction(SIGHUP, &sig_act, NULL), "sigaction SIGHUP \n");
+        EXIT_ON_SIGNAL_HANDLING(sigaction(SIGQUIT, &sig_act, NULL), "sigaction SIGQUIT \n");
+        EXIT_ON_SIGNAL_HANDLING(sigaction(SIGTERM, &sig_act, NULL), "sigaction SIGTERM \n");
+        EXIT_ON_SIGNAL_HANDLING(sigaction(SIGUSR1, &sig_act, NULL), "sigaction SIGUSR1 \n");
+        
+
+        // initialize the buffer
         char buff[MAXFILENAME];
         int n_byte_read; 
         // Initialize the list that stores all the results
@@ -265,13 +316,10 @@ int main (int argc, char *argv[]){
                 exit(EXIT_FAILURE); 
            }
            else{
-            
+             
             // Check fd set
             for(fd_index = 0; fd_index <= fd_num; fd_index ++){
-                if(sig_pipe_rise == 1){
-                    close(fd_index); 
-                    continue; 
-                }
+                
                 if(FD_ISSET(fd_index, &ready_set)){
                     
                     // If fd ready is the server fd ("fd_sk") then accept a new connection 
@@ -290,7 +338,7 @@ int main (int argc, char *argv[]){
                         if(n_byte_read == -1){
                             close(fd_index); 
                             perror("read"); 
-                            return 1; 
+                            exit(EXIT_FAILURE); 
                         }
                        
                         if(n_byte_read == 0){
@@ -311,7 +359,7 @@ int main (int argc, char *argv[]){
                                 perror("overflow/underflow"); 
                                 errno = ERANGE; 
                                 fprintf(stderr, "Err code: %d", errno); 
-                                return 1;   
+                                exit(EXIT_FAILURE);   
                             }
                             
                             //  Printing partial result (if SIGSUR1 arise)
@@ -322,7 +370,7 @@ int main (int argc, char *argv[]){
                                         errno = EINVAL; 
                                         perror("main [farm] linked_list_access_data"); 
                                         fprintf(stderr, "Err code: %d\n", errno); 
-                                        return 1;
+                                        exit(EXIT_FAILURE);
                                     }
                                     printf("%ld %s\n", entry->value, (char*)entry->data); 
                                     
@@ -397,7 +445,8 @@ else{                           // BACK TO
 
 //=================================================================================
     // Parsing argv
-
+   
+    
     if(argc < 2) {
         printf("Inserire i parametri da riga di comando\n");
         exit(EXIT_FAILURE) ;
@@ -463,7 +512,7 @@ else{                           // BACK TO
     char **files = malloc((number_of_file)*sizeof(char*));
     if(files == NULL){
         perror ("malloc fail main [farm]; files"); 
-        errno = ENOMEM;
+        
         fprintf(stderr, "errno value: %d\n", errno);  
         exit(EXIT_FAILURE); 
     }
@@ -472,7 +521,7 @@ else{                           // BACK TO
         files[j] = malloc(length * (sizeof(char*)));
         if(files[j] == NULL){
             perror ("malloc fail main [farm]; files[j]"); 
-            errno = ENOMEM;
+            
             fprintf(stderr, "errno value: %d\n", errno);  
             exit(EXIT_FAILURE); 
         }
@@ -493,7 +542,7 @@ else{                           // BACK TO
     master_args_t *master_args = (master_args_t *)malloc(sizeof(master_args_t));
     if(master_args == NULL){
         perror ("malloc fail main [farm]; master_args"); 
-        errno = ENOMEM;
+        
         fprintf(stderr, "errno value: %d\n", errno);  
         exit(EXIT_FAILURE); 
     }
@@ -556,7 +605,7 @@ else{                           // BACK TO
             exit(EXIT_FAILURE); 
         }
 
-        
+       
     //=================================================================================
     //  Pool, queue, task, and master thread destruction
         if ((wait(NULL)== -1)){

@@ -22,7 +22,7 @@
 
 #define EXIT_ON_SIGNAL_HANDLING(fun, msg)  \
 	if((fun) == -1){	\
-		fprintf(stderr, msg); exit(EXIT_FAILURE);	\
+		fprintf(stderr, msg); perror(msg); exit(EXIT_FAILURE);	\
 	}	
 	
 
