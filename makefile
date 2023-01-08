@@ -6,7 +6,7 @@ BUILD = ./
 OBJ_DIR := ./obj
 SRC_DIR := ./src
 TEST_DIR := ./testdir
-DUMMIES_DIR = ./testDir
+
 
 TARGETS = farm generafile
 
@@ -48,7 +48,7 @@ generafile:	$(OBJ-generafile)
 
 farm:   $(OBJ-farm)
 		$(CC) $(CFLAGS) $(INCLUDE) -o $(BUILD)/farm $(OBJ-farm) $(LIBS)
-
+#lunch the script "normalexe.sh" use for debugging 
 normalexe:	farm
 			@chmod +x scripts/normalexe.sh
 			scripts/normalexe.sh
@@ -61,11 +61,12 @@ test:	farm
 all: $(TARGETS)
 
 .PHONY: cleanall all clean
+#this target is use to delete all test file and object files
 cleanall:
 	rm -f $(OBJ_DIR)/* ./*.dat ./*.txt 
 	rm --recursive -f $(TEST_DIR)
 	@touch $(OBJ_DIR)
-
+#this target is use to clean up without deleting object files
 clean:
 	rm -f ./*.dat ./*.txt 
 	rm --recursive -f $(TEST_DIR)

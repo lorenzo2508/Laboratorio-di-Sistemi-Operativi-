@@ -171,29 +171,29 @@ void lsR(const char nomedir[], linkedList_t *dir_file_list) {
 
 int main (int argc, char *argv[]){
 
-    //signal handling
+    //  For signals handling, is used a dedicate thread, like the example at the man page for "pthread_sigmask(3)"
+    //  (see: man pthread_sigmask) 
     //  Declaretion for handling the signals
 
     pthread_t signal_handler; // thread use to handle signals
 
-    struct sigaction sig_act; 
-    sigset_t sigset; 
+   
+    sigset_t set; 
     partial_result = 0; 
     no_more_task = 0; 
 
-    sigemptyset(&sigset); 
-    sigaddset(&sigset, SIGINT);
-    sigaddset(&sigset, SIGHUP);
-    sigaddset(&sigset, SIGQUIT);
-    sigaddset(&sigset, SIGTERM);
-    sigaddset(&sigset, SIGUSR1);
-    sigaddset(&sigset, SIGUSR2);
-    sigaddset(&sigset, SIGPIPE);
-    
-    memset(&sig_act, 0, sizeof(sig_act));
-    sig_act.sa_mask = sigset; 
+    EXIT_ON_SIGNAL_HANDLING(sigemptyset(&set), "sigemptyset\n");
+    EXIT_ON_SIGNAL_HANDLING(sigaddset(&set, SIGINT), "sigaddset SIGINT");
+    EXIT_ON_SIGNAL_HANDLING(sigaddset(&set, SIGHUP), "sigaddset SIGHUP");
+    EXIT_ON_SIGNAL_HANDLING(sigaddset(&set, SIGQUIT), "sigaddset SIGQUIT");
+    EXIT_ON_SIGNAL_HANDLING(sigaddset(&set, SIGTERM), "sigaddset SIGTERM");
+    EXIT_ON_SIGNAL_HANDLING(sigaddset(&set, SIGPIPE), "sigaddset SIGPIPE");
+    EXIT_ON_SIGNAL_HANDLING(sigaddset(&set, SIGUSR2), "sigaddset SIGUSR2");
+    EXIT_ON_SIGNAL_HANDLING(sigaddset(&set, SIGUSR1), "sigaddset SIGUSR1");
 
-    if( (pthread_sigmask(SIG_BLOCK, &sigset, NULL)) != 0){
+    
+
+    if( (pthread_sigmask(SIG_BLOCK, &set, NULL)) != 0){
         fprintf(stderr, "FATAL ERROR \n"); 
         perror("pthread_sigmask"); 
         abort(); 
@@ -201,7 +201,7 @@ int main (int argc, char *argv[]){
 
 //  Create signal handler thread
 
-    if( (pthread_create(&signal_handler, NULL, &signal_handler_func, (void*) &sigset)) != 0){
+    if( (pthread_create(&signal_handler, NULL, &signal_handler_func, (void*) &set)) != 0){
         perror("Signal handler thread creation"); 
         fprintf(stderr, "Signal handler thread creation fail, abort \n"); 
         abort();  
