@@ -26,7 +26,7 @@
 #endif
 #define SOCKMAXPATH 108
 #define BUFSIZE 256
-#define MAXCONN 100
+
 
 volatile sig_atomic_t partial_result; 
 volatile sig_atomic_t no_more_task; 
