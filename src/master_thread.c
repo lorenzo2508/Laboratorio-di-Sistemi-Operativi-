@@ -333,7 +333,7 @@ void *enqueue_task(void *arg){
         // If some signals (SIGINT, SIGQUIT, SIGHUP, SIGTERM) set "no_more_task"
         // the master_thread enqueue the special tasks to stop the pool and notify that collector has to exit his while loop
         // then master_thread stops. 
-        //signal handling
+        // 
         if(no_more_task == 1){
             task_t *end_taks = (task_t*)malloc(sizeof(task_t)); // Use by threadpool to stop all threads
              if(end_taks ==NULL){
