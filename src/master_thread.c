@@ -391,13 +391,13 @@ void *enqueue_task(void *arg){
         while(args->queue->list->length == args->queue->queue_max_bound){
             pthread_cond_wait(&args->queue->queue_cond, &args->queue->queue_lock); 
         }
-      //fprintf(stderr, "pusho il task \n");
+      
 
         // Put the task in the queue 
         push(args->queue, (void*)task, sizeof(task_t));
         i++;
       
-      //fprintf(stderr, "rilascio le lock e chiamo la broadcast\n");
+     
 
         pthread_mutex_unlock(&args->queue->queue_lock); 
         pthread_cond_broadcast(&args->queue->queue_cond);
