@@ -36,21 +36,18 @@ thread_pool_t *thread_pool_create(int thread_num, queue_t *queue){
     }
     thread_pool->thread_num = thread_num; 
     thread_pool->queue = queue; 
-    thread_pool->lock = (pthread_mutex_t) PTHREAD_MUTEX_INITIALIZER; 
-    thread_pool->signal = (pthread_cond_t) PTHREAD_COND_INITIALIZER; 
-    pthread_mutex_lock(&thread_pool->lock);
+ 
     for (int i = 0; i < thread_num; i++){
         //fprintf(stderr, "flag activ in pool create %d\n", thread_pool->active);
         if((pthread_create(&(thread_pool->pool[i]), NULL, &thread_task, (void*) thread_pool)) != 0){
-             perror("Fail during threadPool creation"); 
             errno = EACCES;
+            perror("Fail during threadPool creation"); 
             fprintf(stderr, "errno value: %d", errno);   
             return NULL;  
         }
         
     }
-    pthread_mutex_unlock(&thread_pool->lock);
-
+  
 
 
     return thread_pool; 
@@ -68,8 +65,6 @@ void *thread_task(void *arg){
             break;
         }
 
-        
-       
         pthread_mutex_lock(&thread_pool->queue->queue_lock); 
      
         while(thread_pool->queue->list->length == 0){
@@ -80,7 +75,7 @@ void *thread_task(void *arg){
         
         task_t *thread_task = (task_t*) take(thread_pool->queue); 
        // Use to stop the pool 
-       // also use when signal rise -signal handling
+       // also use when signals rise 
        if((strcmp(thread_task->arg, "stop")) == 0){
             thread_pool->active = 0;
             push(thread_pool->queue, (void*)thread_task, sizeof(task_t));
@@ -91,10 +86,10 @@ void *thread_task(void *arg){
        
         
         //exec task 
+        // invoke the function (aka task) that the worker has to execute
         thread_task->taskfunc(thread_task->arg);
-        // Pull out the task from the queue 
-     
 
+        // Pull out the task from the queue 
         pop(thread_pool->queue);  
 
         pthread_cond_broadcast(&thread_pool->queue->queue_cond);

@@ -22,7 +22,7 @@ void *order_insertion (linkedList_t *linked_list, long value, char *path);
 linkedList_t *linked_list_create(){
     linkedList_t *new_list = (linkedList_t *) malloc(sizeof(linkedList_t));
     if(new_list == NULL){
-        perror ("malloc fail linked_list_create; new_list"); 
+        perror ("malloc fail linked_list_create;"); 
         errno = ENOMEM;
         fprintf(stderr, "errno value: %d\n", errno);  
         exit(EXIT_FAILURE); 
@@ -67,8 +67,8 @@ void linkedList_destroy_node(node_t *node_to_destroy){
 node_t * iterate_on_list(linkedList_t *linked_list, int index){
 
     if(linked_list == NULL){
+        errno = EINVAL;
         perror("linkedList: iterate_on_list"); 
-        errno = EINVAL; 
         fprintf(stderr, "Need to pass a pointer to a LinkedList type object Err code: %d\n", errno); 
         exit(EXIT_FAILURE); 
     }
@@ -89,26 +89,26 @@ node_t * iterate_on_list(linkedList_t *linked_list, int index){
 }
 
 
-// The insert a new node in the list.
+// The insert a new node, sorted in ascending order, in the list.
 // An auxiliary index is used to simplify the management of the linkedList.
 void *linkedList_insert_order(linkedList_t *linked_list, int index, void *data, long value, unsigned long size){
     
     if(data == NULL){
-        perror("linkedList: linkedList_insert_order"); 
         errno = EINVAL; 
+        perror("linkedList: linkedList_insert_order"); 
         fprintf(stderr, "data can't be NULL. Err code: %d\n", errno); 
         return NULL; 
     }
 
     if(linked_list == NULL){
+        errno = EINVAL;
         perror("linkedList: linkedList_insert_order"); 
-        errno = EINVAL; 
         fprintf(stderr, "Need to pass a pointer to a LinkedList type object Err code: %d\n", errno); 
         return NULL; 
     }
     if(size == 0){
+        errno = EINVAL;
         perror("linkedList: linkedList_insert_order"); 
-        errno = EINVAL; 
         fprintf(stderr, "Size can't be zero %d\n", errno); 
         return NULL; 
     }
@@ -168,22 +168,22 @@ void *linkedList_insert_order(linkedList_t *linked_list, int index, void *data, 
 //  in case of failure it will return null
 void *linkedList_insert(linkedList_t *linked_list, int index, void *data, unsigned long size){
     if(data == NULL){
-        perror("linkedList: linkedList_insert"); 
-        errno = EINVAL; 
+        errno = EINVAL;
+        perror("linkedList: linkedList_insert");  
         fprintf(stderr, "data can't be NULL. Err code: %d\n", errno); 
         return NULL; 
     }
 
     if(linked_list == NULL){
+        errno = EINVAL;
         perror("linkedList: linkedList_insert"); 
-        errno = EINVAL; 
         fprintf(stderr, "Need to pass a pointer to a LinkedList type object Err code: %d\n", errno); 
         return NULL; 
     }
 
-    if(size == 0){
-        perror("linkedList: linkedList_insert"); 
-        errno = EINVAL; 
+    if(size == 0){ 
+        errno = EINVAL;
+        perror("linkedList: linkedList_insert");  
         fprintf(stderr, "Size can't be zero %d\n", errno); 
         return NULL; 
     }
@@ -217,8 +217,8 @@ void *linkedList_insert(linkedList_t *linked_list, int index, void *data, unsign
 void *linkedList_remove_node(linkedList_t *linked_list, int index){
 
     if(linked_list == NULL){
-        perror("linkedList: linkedList_remove_node"); 
         errno = EINVAL; 
+        perror("linkedList: linkedList_remove_node"); 
         fprintf(stderr, "Need to pass a pointer to a LinkedList type object Err code: %d\n", errno); 
         return NULL; 
     }
@@ -253,8 +253,8 @@ void *linkedList_remove_node(linkedList_t *linked_list, int index){
 void * linkedList_access_data(linkedList_t *linked_list, int index){
 
     if(linked_list == NULL){
-        perror("linkedList: linkedList_access_data"); 
-        errno = EINVAL; 
+        errno = EINVAL;
+        perror("linkedList: linkedList_access_data");  
         fprintf(stderr, "Need to pass a pointer to a LinkedList type object Err code: %d\n", errno); 
         return NULL; 
     }
@@ -274,15 +274,15 @@ void * linkedList_access_data(linkedList_t *linked_list, int index){
 //  Insert entry in a linked list by ascending order
 void *order_insertion (linkedList_t *linked_list, long value, char *path){
     if(path == NULL){
-        perror("linkedList order_insertion"); 
         errno = EINVAL; 
+        perror("linkedList order_insertion"); 
         fprintf(stderr, "path can't be NULL. Err code: %d\n", errno); 
         return NULL; 
 
     }
     if(linked_list == NULL){
+        errno = EINVAL;
         perror("linkedList order_insertion"); 
-        errno = EINVAL; 
         fprintf(stderr, "Need to pass a pointer to a LinkedList type object. Err code: %d\n", errno); 
         return NULL; 
 

@@ -3,6 +3,10 @@
 #define node_h
 
 
+//
+// Created by lorenzo on 15/9/22.
+//
+
 // Nodes are used to store data of any type in a list.  
 typedef struct node{
     // The data is stored as a void pointer - casting is required for proper access.

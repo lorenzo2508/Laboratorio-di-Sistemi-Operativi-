@@ -17,8 +17,8 @@ void pop (queue_t *queue);
 queue_t *queue_create(int queue_len){
 
     if(queue_len == 0){
-        perror("queue; queue_create"); 
         errno = EINVAL; 
+        perror("queue; queue_create"); 
         fprintf(stderr, "Queue's length can't be 0. Err code: %d\n", errno); 
         return NULL; 
     }
@@ -50,22 +50,22 @@ void queue_destroy(queue_t *queue){
 void *push(queue_t *queue, void *data, unsigned long size){
 
     if(queue == NULL){
+        errno = EINVAL;
         perror("queue; push. Need to pass a pointer to a queue type object"); 
-        errno = EINVAL; 
         fprintf(stderr, "Err code: %d \n", errno); 
         return NULL;
     }
 
     if(data == NULL){
+        errno = EINVAL;
         perror("queue; push. Data to insert can't be NULL"); 
-        errno = EINVAL; 
         fprintf(stderr, "Err code: %d \n", errno); 
         return NULL;
     }
 
     if(size == 0){
-        perror("queue; push. size of data can't be 0"); 
-        errno = EINVAL; 
+        errno = EINVAL;
+        perror("queue; push. size of data can't be 0");  
         fprintf(stderr, "Err code: %d \n", errno); 
         return NULL;
     }

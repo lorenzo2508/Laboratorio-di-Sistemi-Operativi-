@@ -19,7 +19,6 @@
 #include "../include/queue.h"
 #include "../include/thread_pool.h"
 #include "../include/master_thread.h"
-#include "../include/utilities.h"
 #include "../include/util.h"
 
 #if !defined(MAXFILENAME)
@@ -290,8 +289,21 @@ int main (int argc, char *argv[]){
         sa.sun_family = AF_UNIX;
         
         fd_sk = socket(AF_UNIX, SOCK_STREAM, 0); 
-        bind(fd_sk, (struct sockaddr *)&sa, sizeof(sa)); 
-        listen(fd_sk, SOMAXCONN); 
+        if(fd_sk == -1){
+            perror("socket"); 
+            fprintf(stderr, "Err code: %d\n", errno);
+            exit(EXIT_FAILURE); 
+        }
+        if((bind(fd_sk, (struct sockaddr *)&sa, sizeof(sa))) == -1){
+            perror("bind"); 
+            fprintf(stderr, "Err code: %d\n", errno);
+            exit(EXIT_FAILURE); 
+        } 
+        if((listen(fd_sk, SOMAXCONN)) == -1){
+            perror("listen"); 
+            fprintf(stderr, "Err code: %d\n", errno);
+            exit(EXIT_FAILURE); 
+        }
 
        
         //===========================================================================
@@ -348,7 +360,8 @@ int main (int argc, char *argv[]){
                         }
                         else{
                             
-                            //  Split the request string (request string = "<long integer> <filename.dat>")
+                            //  Split the request string 
+                            //  (request string = "<long integer> <filename.dat>")
                             char *token; 
                             token = strtok(buff, " ");  //  It splis on the space
                             
@@ -512,7 +525,7 @@ else{                           // BACK TO
     char **files = malloc((number_of_file)*sizeof(char*));
     if(files == NULL){
         perror ("malloc fail main [farm]; files"); 
-        
+        errno=ENOMEM; 
         fprintf(stderr, "errno value: %d\n", errno);  
         exit(EXIT_FAILURE); 
     }
@@ -521,7 +534,7 @@ else{                           // BACK TO
         files[j] = malloc(length * (sizeof(char*)));
         if(files[j] == NULL){
             perror ("malloc fail main [farm]; files[j]"); 
-            
+            errno=ENOMEM; 
             fprintf(stderr, "errno value: %d\n", errno);  
             exit(EXIT_FAILURE); 
         }
@@ -542,7 +555,7 @@ else{                           // BACK TO
     master_args_t *master_args = (master_args_t *)malloc(sizeof(master_args_t));
     if(master_args == NULL){
         perror ("malloc fail main [farm]; master_args"); 
-        
+        errno=ENOMEM; 
         fprintf(stderr, "errno value: %d\n", errno);  
         exit(EXIT_FAILURE); 
     }
@@ -587,6 +600,7 @@ else{                           // BACK TO
         }
         queue_t *queue = queue_create(queue_len);
         if(queue == NULL){
+            fprintf(stderr,"Fail during queue creation");
             exit(EXIT_FAILURE); 
         }
         
@@ -634,7 +648,7 @@ else{                           // BACK TO
                 fprintf(stderr, "Err code: %d", errno); 
                 exit(EXIT_FAILURE);  
             }
-            exit(EXIT_FAILURE); 
+            return -1; 
            
         }
         

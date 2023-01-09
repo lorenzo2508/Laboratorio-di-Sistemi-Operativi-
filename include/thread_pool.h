@@ -21,10 +21,7 @@ typedef struct thread_pool{
     
     pthread_t *pool; //array of thread 
 
-    // making the pool thread-safe.
-    pthread_mutex_t lock;
-    pthread_cond_t signal;
-
+   
 }thread_pool_t;
 
 

@@ -10,11 +10,12 @@ void destroy_node(node_t *node);
 
 // The constructor is used to create new instances of nodes.
 node_t *create_node(void *data, long value, unsigned long size){
-    if (size < 1)
-    {
+    if (size < 1){
         // Confirm the size of the data is at least one, otherwise exit with an error message.
+        errno = EINVAL; 
+        perror("create_node"); 
         printf("Invalid data size for node...\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     // Create a Node instance to be returned
     node_t *node = (node_t*)malloc(sizeof(node_t));

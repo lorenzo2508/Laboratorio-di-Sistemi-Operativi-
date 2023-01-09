@@ -12,7 +12,7 @@
 #include <time.h>
 #include "../include/master_thread.h"
 #include "../include/util.h"
-#include "../include/utilities.h"
+
 
 #define BUFSZ 8
 #define MAXFILENAME 2048
@@ -45,8 +45,8 @@ pthread_t *master_create (master_args_t *master_args, queue_t *queue){
     master_args_t *args = master_args; 
     args->queue = queue; 
     if((pthread_create(master_thread, NULL, &enqueue_task, args) != 0)){
-        perror("Fail during threadPool creation"); 
         errno = EACCES;
+        perror("Fail during threadPool creation"); 
         fprintf(stderr, "errno value: %d", errno);   
         return NULL;  
     }
@@ -55,8 +55,9 @@ pthread_t *master_create (master_args_t *master_args, queue_t *queue){
     return master_thread; 
 }
 
+// this is the task that a worker of the pool has to execute
 void *workerTask (char *filepath){
-    int err = 0; 
+    
     
     if(filepath == NULL){
         errno = EINVAL; 
@@ -66,13 +67,12 @@ void *workerTask (char *filepath){
     char sockname[MAXPATH] = "./farm.sck"; 
     // Print task. Notify to collector that he has to print partial results 
     if(strcmp(filepath, "print") == 0){
-    int err; 
+   
     
     long fd_socket = socket(AF_UNIX, SOCK_STREAM, 0); 
     if(fd_socket == -1){
-        err = errno;
         perror("Fail during socket creation"); 
-        fprintf(stderr, "errno code %d", err); 
+        fprintf(stderr, "errno code %d", errno); 
         exit(EXIT_FAILURE);
     }
     struct sockaddr_un saddr;
@@ -86,17 +86,22 @@ void *workerTask (char *filepath){
     snprintf(buf_send_to_collector, MAXFILENAME, "%s", filepath);
     //fprintf(stderr, "sopra la connect 1\n");
     while((connect(fd_socket, (struct sockaddr*) &saddr, sizeof(saddr))) == -1){
-        
-        if ( errno == ENOENT ) 
-            sleep(1);
+        if ( errno == ENOENT ) {
+            if((usleep(1000000)) == -1){
+                perror("usleep");
+                fprintf(stderr, "Err code: %d\n", errno); 
+                exit(EXIT_FAILURE);
+            }
+        }
+            
         else exit(EXIT_FAILURE);             
     }
     
     //fprintf(stderr, "scrivo exit, buf: %s \n", buf_send_to_collector); 
-    if((write(fd_socket, buf_send_to_collector, MAXFILENAME)) == -1){
-        perror("write"); 
+    if((writen(fd_socket, buf_send_to_collector, MAXFILENAME)) == -1){
+        perror("writen"); 
         close(fd_socket); 
-        return NULL; 
+        exit(EXIT_FAILURE); 
     }
     close(fd_socket);
     return NULL; 
@@ -106,13 +111,12 @@ void *workerTask (char *filepath){
 
         // Exit task. Notify to collector that he has to end his while loop
     if(strcmp(filepath, "exit") == 0){
-        int err; 
+        
         
         long fd_socket = socket(AF_UNIX, SOCK_STREAM, 0); 
         if(fd_socket == -1){
-            err = errno;
             perror("Fail during socket creation"); 
-            fprintf(stderr, "errno code %d", err); 
+            fprintf(stderr, "errno code %d", errno); 
             exit(EXIT_FAILURE);
         }
         struct sockaddr_un saddr;
@@ -125,15 +129,21 @@ void *workerTask (char *filepath){
 
         snprintf(buf_send_to_collector, MAXFILENAME, "%s", filepath);
         while((connect(fd_socket, (struct sockaddr*) &saddr, sizeof(saddr))) == -1){
-            if ( errno == ENOENT ) 
-                sleep(1);
+            if ( errno == ENOENT ){
+                if((usleep(1000000)) == -1){
+                    perror("usleep");
+                    fprintf(stderr, "Err code: %d\n", errno); 
+                    exit(EXIT_FAILURE);
+                }
+            } 
+    
             else exit(EXIT_FAILURE); 
         }
         //fprintf(stderr, "scrivo exit, buf: %s \n", buf_send_to_collector); 
-        if((write(fd_socket, buf_send_to_collector, MAXFILENAME)) == -1){
-            perror("write"); 
+        if((writen(fd_socket, buf_send_to_collector, MAXFILENAME)) == -1){
+            perror("writen"); 
             close(fd_socket); 
-            return NULL; 
+            exit(EXIT_FAILURE); 
         }
         close(fd_socket);
         return NULL; 
@@ -180,6 +190,7 @@ void *workerTask (char *filepath){
     int cont = 0; 
     long ris = 0; 
     while ((bytes = fread (buf, sizeof *buf, readsz, fp)) == readsz) {
+        // here the possible error derived from "fread" is handled as shown in the linux man page for fread
         if (bytes != readsz) {
             fprintf(stderr, "fread() failed: %zu\n", bytes);
             exit(EXIT_FAILURE);
@@ -197,9 +208,8 @@ void *workerTask (char *filepath){
     
     long fd_socket = socket(AF_UNIX, SOCK_STREAM, 0); 
     if(fd_socket == -1){
-        err = errno;
         perror("Fail during socket creation"); 
-        fprintf(stderr, "errno code %d", err); 
+        fprintf(stderr, "errno code %d", errno); 
         exit(EXIT_FAILURE);
     }
     struct sockaddr_un saddr;
@@ -213,15 +223,20 @@ void *workerTask (char *filepath){
     snprintf(buf_send_to_collector, MAXFILENAME, "%ld %s", ris, filepath);
    
     while((connect(fd_socket, (struct sockaddr*) &saddr, sizeof(saddr))) == -1){
-        if ( errno == ENOENT ) 
-                sleep(1);
+        if ( errno == ENOENT ){
+                if((usleep(1000000)) == -1){
+                perror("usleep");
+                fprintf(stderr, "Err code: %d\n", errno); 
+                exit(EXIT_FAILURE);
+            }
+        }
         else exit(EXIT_FAILURE); 
     }
     //fprintf(stderr, "sopra la write 3\n");
-    if( (write(fd_socket, buf_send_to_collector, MAXFILENAME)) == -1){
-        perror("write"); 
+    if( (writen(fd_socket, buf_send_to_collector, MAXFILENAME)) == -1){
+        perror("writen"); 
         close(fd_socket); 
-        return NULL; 
+        exit(EXIT_FAILURE); 
     }
     //fprintf(stderr, "sopra la close 3, buff: %s\n", buf_send_to_collector);
     close(fd_socket); 
