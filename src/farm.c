@@ -25,7 +25,6 @@
 #define MAXFILENAME 2048
 #endif
 #define SOCKMAXPATH 108
-#define BUFSZ 8
 #define BUFSIZE 256
 #define MAXCONN 100
 
