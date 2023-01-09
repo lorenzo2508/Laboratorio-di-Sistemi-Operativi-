@@ -367,7 +367,7 @@ void *enqueue_task(void *arg){
             break; 
 
         }
-        //signal handling
+        // partial_result (SIGUSR1 arrive)
         if(partial_result == 1){
             task_t *print_taks = (task_t*)malloc(sizeof(task_t)); // Use to notify collector process to print partial results 
 
