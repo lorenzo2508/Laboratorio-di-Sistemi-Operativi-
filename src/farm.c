@@ -337,6 +337,11 @@ int main (int argc, char *argv[]){
                     if(fd_index == fd_sk){
                        
                         fd_client = accept(fd_sk, NULL, 0); 
+                        if(fd_client == -1){
+                            perror("accept"); 
+                            fprintf(stderr, "Err code:%d", errno); 
+                            exit(EXIT_FAILURE);
+                        }
                        
                         FD_SET(fd_client, &set); 
                         if(fd_client > fd_num)

@@ -36,7 +36,12 @@ queue_t *queue_create(int queue_len){
     // Instantiate the queue's LinkedList via the list_create.
     queue->list = linked_list_create();
     queue->queue_lock = (pthread_mutex_t) PTHREAD_MUTEX_INITIALIZER;
-    pthread_cond_init(&queue->queue_cond, NULL);
+    if((pthread_cond_init(&queue->queue_cond, NULL)) != 0){
+        errno = EACCES; 
+        perror("pthread_cond_init"); 
+        fprintf(stderr, "Err code: %d\n", errno); 
+        exit(EXIT_FAILURE); 
+    }
     
     return queue;
 }
