@@ -41,7 +41,7 @@ mv file111.dat file150.dat testdir/testdir2
 
 # delaied execution by 200 millisec, with 8 threads and a queue 8 buckets long  
 # valgrind is used to check for memory leak
-valgrind --leak-check=full ./farm -n 8 -q 8 -d testdir file*
+valgrind --leak-check=full ./farm -n 4 -q 8 -t 200 -d testdir file* 
 
 echo ""
 echo -e "${GREEN}normalexe FINISH${OFF}"

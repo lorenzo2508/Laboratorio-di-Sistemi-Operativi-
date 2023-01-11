@@ -9,7 +9,6 @@
 #include <time.h>
 #include <signal.h>
 #include <errno.h>
-#include <sys/types.h> 
 #include <sys/socket.h>
 #include <sys/uio.h>
 #include <sys/un.h>
@@ -225,30 +224,10 @@ int main (int argc, char *argv[]){
         //  COLLECTOR PROCESS CODE
 
         // Signal handling: the collector process has to ignore signals
-
-         
-        sigset_t sigset;
-        EXIT_ON_SIGNAL_HANDLING(sigemptyset(&sigset), "sigemptyset\n"); 
-
-        // Sigaddset may fail if argument is invalid so I added error handling
-        EXIT_ON_SIGNAL_HANDLING(sigaddset(&sigset, SIGINT), "sigaddset SIGINT");
-        EXIT_ON_SIGNAL_HANDLING(sigaddset(&sigset, SIGHUP), "sigaddset SIGHUP");
-        EXIT_ON_SIGNAL_HANDLING(sigaddset(&sigset, SIGQUIT), "sigaddset SIGQUIT");
-        EXIT_ON_SIGNAL_HANDLING(sigaddset(&sigset, SIGTERM), "sigaddset SIGTERM");
-        EXIT_ON_SIGNAL_HANDLING(sigaddset(&sigset, SIGPIPE), "sigaddset SIGPIPE");
-        EXIT_ON_SIGNAL_HANDLING(sigaddset(&sigset, SIGUSR1), "sigaddset SIGUSR1");
-        
-        // pthread_sigmask is use instead of sigprocmask for future/eventual extention of collector process
-        // from a single thread program into a multithread program.
-        // In case of a multithread extention of the process, a thread for signal handling should be  
-        // implemente
-
-        // Block the signals until the handler's installation is done 
-        EXIT_ON_SIGNAL_HANDLING(pthread_sigmask(SIG_BLOCK, &sigset, NULL), "pthread_sigmask\n");
-        
         struct sigaction sig_act;
         memset(&sig_act, 0, sizeof(sig_act));
         sig_act.sa_handler = SIG_IGN; // Signals are ignored by Collector process
+        sig_act.sa_flags = SA_RESTART; // I don't want to interrupt any syscall 
         sigset_t handler_mask;
         EXIT_ON_SIGNAL_HANDLING(sigemptyset(&handler_mask), "sigemptyset\n"); 
         EXIT_ON_SIGNAL_HANDLING(sigaddset(&handler_mask, SIGINT), "sigaddset SIGINT");
@@ -266,6 +245,7 @@ int main (int argc, char *argv[]){
         EXIT_ON_SIGNAL_HANDLING(sigaction(SIGTERM, &sig_act, NULL), "sigaction SIGTERM \n");
         EXIT_ON_SIGNAL_HANDLING(sigaction(SIGUSR1, &sig_act, NULL), "sigaction SIGUSR1 \n");
         
+         
 
         // initialize the buffer
         char buff[MAXFILENAME];
@@ -450,13 +430,14 @@ else{                           // BACK TO
 //=================================================================================
 //  Declaration 
 
-    int thread_num; 
-    int queue_len; 
+    long thread_num; 
+    long queue_len; 
     int delay_request_time = 0; 
     char source_dir[FILENAME_MAX]; 
     int d_isSet = 0; 
     int num_of_thread_set = 0; 
     int queue_len_set = 0; 
+    int check_if_number = 0; 
     //==============================================================================================
 
 
@@ -478,7 +459,17 @@ else{                           // BACK TO
             // This option specifies the number of thread in the pool
             case 'n':
                 // I use sscanf to read the number of threads from optarg and write it in the variable thread_num
-                sscanf(optarg, "%d", &thread_num);
+                check_if_number = isNumber(optarg, &thread_num); 
+                if(check_if_number == 2){
+                    perror("overflow/underflow"); 
+                    errno = ERANGE; 
+                    fprintf(stderr, "Err code: %d", errno); 
+                    exit(EXIT_FAILURE);   
+                }
+                if(check_if_number == 1){
+                    fprintf(stderr, "Need to pass a number as argument of opt -n\n"); 
+                    exit(EXIT_FAILURE);
+                }
                 cont_opt ++;
                 num_of_thread_set = 1; 
                 //printf("caso -n %d\n", thread_num); 
@@ -486,7 +477,17 @@ else{                           // BACK TO
             // This option specifies the upper bound of the queue 
             case 'q':
                 // I use sscanf to read from optarg the queue's upper bound and I write it in queue_len 
-                sscanf(optarg, "%d", &queue_len);
+                check_if_number = isNumber(optarg, &queue_len); 
+                if(check_if_number == 2){
+                    perror("overflow/underflow"); 
+                    errno = ERANGE; 
+                    fprintf(stderr, "Err code: %d", errno); 
+                    exit(EXIT_FAILURE);   
+                }
+                if(check_if_number == 1){
+                    fprintf(stderr, "Need to pass a number as argument of opt -q\n"); 
+                    exit(EXIT_FAILURE);
+                }
                 queue_len_set = 1; 
                 cont_opt ++;
                 //printf("caso -q %d\n", queue_len); 
@@ -504,6 +505,7 @@ else{                           // BACK TO
                 // I use sscanf to read from optarg the delay time between two successive requests and I write it in delay_request_time
                 sscanf(optarg, "%d", &delay_request_time);
                 cont_opt ++; 
+                
                 //printf("caso -t %d\n", delay_request_time); 
                 break;
             default:
@@ -570,6 +572,7 @@ else{                           // BACK TO
     }
     
     //  Set the delay time between two request
+    //  If delay time (opt -t) is not set, delay_request_time has value 0
     master_args->delay_request_time = delay_request_time; 
     
    
