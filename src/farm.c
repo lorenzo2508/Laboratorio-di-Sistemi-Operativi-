@@ -628,7 +628,7 @@ else{                           // BACK TO
     //=================================================================================
     //  Pool, queue, task, and master thread destruction
         if ((wait(NULL)== -1)){
-            perror("wait for collector");
+            perror("wait");
             fprintf(stderr, "Err code: %d", errno);  
             exit(EXIT_FAILURE); 
         }  
