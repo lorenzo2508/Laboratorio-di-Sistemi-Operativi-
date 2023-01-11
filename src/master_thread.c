@@ -411,7 +411,13 @@ void *enqueue_task(void *arg){
 
 //Destroy the master thread, a pointer to the master need to be pass
 void master_thread_destroy(pthread_t *master_thread){
-    pthread_join(*master_thread, NULL);
+    int err; 
+    err = pthread_join(*master_thread, NULL); 
+    if(err != 0){
+        errno = err; 
+        fprintf(stderr, "join master thread Err code: %d\n", err); 
+        exit(EXIT_FAILURE); 
+    }
     
     free(master_thread);
 }

@@ -104,10 +104,14 @@ void *thread_task(void *arg){
 }
 
 void thread_pool_destroy(thread_pool_t *thread_pool){
-    
-    for (int i = 0; i < thread_pool->thread_num; i++)
-    {
-        pthread_join(thread_pool->pool[i], NULL);
+    int err; 
+    for (int i = 0; i < thread_pool->thread_num; i++){
+
+        err = pthread_join(thread_pool->pool[i], NULL);
+        if(err != 0){
+            fprintf(stderr, "join thread pool\n Thread: %d Err code: %d\n", i, err);
+            exit(EXIT_FAILURE);
+        }
     }
     free(thread_pool->pool);
     free(thread_pool);

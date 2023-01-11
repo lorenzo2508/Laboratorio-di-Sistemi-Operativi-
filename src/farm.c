@@ -436,6 +436,7 @@ else{                           // BACK TO
     int num_of_thread_set = 0; 
     int queue_len_set = 0; 
     int check_if_number = 0; 
+    int err; 
     //==============================================================================================
 
 
@@ -635,9 +636,15 @@ else{                           // BACK TO
         if(sig_pipe_rise == 1){
             thread_pool_destroy (thread_pool); // Destroy the pool 
             master_thread_destroy(master_thread); // Destroy master_thread
-            pthread_join(signal_handler, NULL); 
-            fprintf(stderr, "SIGPIPE from server, clear all memory and exit\n");
-             // Free all the data structure
+            err = pthread_join(signal_handler, NULL); 
+            if(err != 0){
+                errno = err; 
+                fprintf(stderr, "join signal thread Err code: %d\n", err); 
+                exit(EXIT_FAILURE); 
+            } 
+         
+           
+            // Free all the data structure
             for (int i = 0; i < number_of_file_cpy_for_destruction; i ++){
                 free(files[i]);
             }
@@ -660,7 +667,12 @@ else{                           // BACK TO
         thread_pool_destroy (thread_pool); // Destroy the pool 
         master_thread_destroy(master_thread); // Destroy master_thread
         pthread_kill(signal_thread_id, SIGUSR2); // Send the signal to stop signal_handler_thread if no signal arises first
-        pthread_join(signal_handler, NULL); 
+        err = pthread_join(signal_handler, NULL); 
+        if(err != 0){
+            errno = err; 
+            fprintf(stderr, "join signal thread Err code: %d\n", err); 
+            exit(EXIT_FAILURE); 
+        } 
         
         
         // Free all the data structure
