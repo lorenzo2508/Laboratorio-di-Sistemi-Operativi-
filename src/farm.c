@@ -10,9 +10,7 @@
 #include <signal.h>
 #include <errno.h>
 #include <sys/socket.h>
-#include <sys/uio.h>
 #include <sys/un.h>
-#include <stdatomic.h>
 #include <sys/wait.h>
 #include "../include/linkedList.h"
 #include "../include/queue.h"
