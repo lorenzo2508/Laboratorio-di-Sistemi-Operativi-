@@ -582,10 +582,10 @@ else{                           // BACK TO
         // Check the argument
         struct stat statbuf;
         int r;
-        SYSCALL_EXIT(stat,r,stat(source_dir, &statbuf),"Facendo stat del nome %s: errno=%d\n", source_dir, errno);
+        SYSCALL_EXIT(stat,r,stat(source_dir, &statbuf),"Doing stat %s: errno=%d\n", source_dir, errno);
         
         if(!S_ISDIR(statbuf.st_mode)) {
-            fprintf(stderr, "%s non e' una directory\n", source_dir);
+            fprintf(stderr, "%s not a dir\n", source_dir);
             exit(EXIT_FAILURE);
         }    
 
