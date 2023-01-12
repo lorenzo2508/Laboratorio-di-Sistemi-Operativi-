@@ -241,6 +241,7 @@ int main (int argc, char *argv[]){
         EXIT_ON_SIGNAL_HANDLING(sigaction(SIGHUP, &sig_act, NULL), "sigaction SIGHUP \n");
         EXIT_ON_SIGNAL_HANDLING(sigaction(SIGQUIT, &sig_act, NULL), "sigaction SIGQUIT \n");
         EXIT_ON_SIGNAL_HANDLING(sigaction(SIGTERM, &sig_act, NULL), "sigaction SIGTERM \n");
+        EXIT_ON_SIGNAL_HANDLING(sigaction(SIGPIPE, &sig_act, NULL), "sigaction SIGPIPE \n");
         EXIT_ON_SIGNAL_HANDLING(sigaction(SIGUSR1, &sig_act, NULL), "sigaction SIGUSR1 \n");
         
          
