@@ -325,8 +325,8 @@ void *enqueue_task(void *arg){
             push(args->queue, (void*)end_taks, sizeof(task_t));
             free(exit_taks);
             free(end_taks);
-            pthread_mutex_unlock(&args->queue->queue_lock); 
             pthread_cond_broadcast(&args->queue->queue_cond);
+            pthread_mutex_unlock(&args->queue->queue_lock); 
             break; 
         }
         
@@ -382,8 +382,8 @@ void *enqueue_task(void *arg){
             print_taks->taskfunc = workerTask;  
             push(args->queue, (void*)print_taks, sizeof(task_t));
             free(print_taks);
-            pthread_mutex_unlock(&args->queue->queue_lock); 
             pthread_cond_broadcast(&args->queue->queue_cond);
+            pthread_mutex_unlock(&args->queue->queue_lock); 
         }
 
         // Wait on this condition: if the queue's length is equal to the bound 
@@ -399,8 +399,8 @@ void *enqueue_task(void *arg){
       
      
 
-        pthread_mutex_unlock(&args->queue->queue_lock); 
         pthread_cond_broadcast(&args->queue->queue_cond);
+        pthread_mutex_unlock(&args->queue->queue_lock); 
 
     }
 

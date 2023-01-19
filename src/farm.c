@@ -679,7 +679,7 @@ else{                           // BACK TO
         // Free all the data structure
         for (int i = 0; i < number_of_file_cpy_for_destruction; i ++){
             free(files[i]);
-        }
+        } 
         free(files);
         linked_list_destroy(master_args->file_list);
         queue_destroy(queue);
